@@ -1,149 +1,70 @@
-import React from "react";
-
-import pic from "../../public/photo.jpeg";
-import resume from "../../public/resume.pdf";
-
-import { FaLinkedin, FaGithub } from "react-icons/fa";
-import { IoLogoYoutube } from "react-icons/io";
-import { FaTelegram } from "react-icons/fa6";
-
-import {
-  SiPostgresql,
-  SiDjango,
-  SiNestjs,
-  SiReact,
-  SiFlutter,
-} from "react-icons/si";
-
-import { ReactTyped } from "react-typed";
-
 function Home() {
   return (
-    <>
-      <div
-        name="Home"
-        className="max-w-screen-2xl container mx-auto px-4 md:px-20 my-28"
-      >
-        <div className="flex flex-col md:flex-row">
-          {/* LEFT SECTION */}
-          <div className="md:w-1/2 mt-12 md:mt-24 space-y-4 order-2 md:order-1">
-            <span className="text-xl">Welcome to My Portfolio</span>
-            <div className="flex space-x-1 text-2xl md:text-4xl">
-              <h1>Hello, I'm a</h1>
-              <ReactTyped
-                className="text-red-700 font-bold"
-                strings={[
-                  "Software Developer",
-                  "DeVops Engineer",
-                  "Full-Stack Developer",
-                ]}
-                typeSpeed={40}
-                backSpeed={50}
-                loop={true}
-              />
-            </div>
+    <section id="home" className="relative overflow-hidden py-24 md:py-28">
+      <div className="mx-auto w-full max-w-6xl px-6 md:px-10">
+        <div className="absolute inset-0 -z-10 grid-sheen opacity-40" />
+        <div className="absolute -left-16 top-0 -z-10 h-52 w-52 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute right-0 top-10 -z-10 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl" />
 
-            <p className="text-sm md:text-md text-justify">
-              I'm Shivam Kumar Chaudhary, a Computer Science graduate and
-              Software Developer with hands-on industry experience building
-              secure, scalable, and real-time systems. I’ve worked across the
-              full development lifecycle — from designing backend APIs with
-              Django and NestJS, to building mobile apps with Flutter and
-              integrating cloud infrastructure using Docker, PostgreSQL, and
-              GCP. My work at Sarva Suvidhaen Pvt Ltd includes developing a
-              Kafka-based notification system, creating a geolocation-based
-              attendance tracker, and contributing to a railway operations
-              platform deployed to real users. I’m passionate about solving
-              real-world problems with clean architecture, automation, and
-              continuous learning.
+        <div className="grid items-center gap-10 md:grid-cols-[1fr_280px] md:gap-14">
+          <div className="max-w-4xl space-y-7">
+            <p className="text-sm uppercase tracking-[0.2em] text-accent">
+              Backend Engineer
+            </p>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white md:text-6xl">
+              Shivam Chaudhary
+            </h1>
+            <p className="max-w-3xl text-xl leading-relaxed text-slate-200 md:text-2xl">
+              I design and build production-grade backend systems for real-world
+              SaaS businesses.
+            </p>
+            <p className="max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg">
+              Engineering philosophy: reliability is a product feature, so
+              architecture decisions should make correctness and operability
+              easier at scale.
             </p>
 
-            {/* CTA BUTTONS */}
-            <div className="flex flex-col md:flex-row md:space-x-4 mt-4 space-y-4 md:space-y-0">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
-                href={resume}
-                download="Shivam_Kumar_Resume.pdf"
-                className="bg-green-600 hover:bg-green-800 text-white font-semibold px-6 py-2 rounded shadow"
+                href="#medshop"
+                className="rounded-md border border-accent bg-accent/10 px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent/20"
               >
-                Download Resume
+                View Work
               </a>
               <a
-                href="mailto:shivamkr7822@gmail.com"
-                className="bg-blue-600 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded shadow"
+                href="https://github.com/Niraj12chaudhary"
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md border border-line px-5 py-2.5 text-sm font-medium text-slate-200 hover:border-slate-300 hover:text-white"
               >
-                Hire Me
+                GitHub
               </a>
-            </div>
-
-            {/* SOCIAL & TECH STACK */}
-            <div className="flex flex-col items-center md:flex-row justify-between mt-8 space-y-6 md:space-y-0">
-              {/* SOCIALS */}
-              <div className="space-y-2">
-                <h1 className="font-bold text-center">Available on</h1>
-                <ul className="flex space-x-5 justify-center">
-                  <li>
-                    <a
-                      href="https://www.linkedin.com/in/shivam-kr-chaudhary/"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <FaLinkedin className="text-2xl cursor-pointer" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://github.com/Niraj12chaudhary"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <FaGithub className="text-2xl cursor-pointer" />
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://www.youtube.com/"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <IoLogoYoutube className="text-2xl cursor-pointer" />
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://t.me/" target="_blank" rel="noreferrer">
-                      <FaTelegram className="text-2xl cursor-pointer" />
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* TECH STACK */}
-              <div className="space-y-2">
-                <h1 className="font-bold text-center">Currently working on</h1>
-                <div className="flex space-x-5 justify-center">
-                  <SiPostgresql className="text-2xl md:text-3xl hover:scale-110 duration-200 rounded-full border-[2px] p-1 cursor-pointer" />
-                  <SiNestjs className="text-2xl md:text-3xl hover:scale-110 duration-200 rounded-full border-[2px] p-1 cursor-pointer" />
-                  <SiDjango className="text-2xl md:text-3xl hover:scale-110 duration-200 rounded-full border-[2px] p-1 cursor-pointer" />
-                  <SiReact className="text-2xl md:text-3xl hover:scale-110 duration-200 rounded-full border-[2px] p-1 cursor-pointer" />
-                  <SiFlutter className="text-2xl md:text-3xl hover:scale-110 duration-200 rounded-full border-[2px] p-1 cursor-pointer" />
-                </div>
-              </div>
+              <a
+                href="/shivam-kr-chaudhary.pdf?v=20260224"
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md border border-line px-5 py-2.5 text-sm font-medium text-slate-200 hover:border-slate-300 hover:text-white"
+              >
+                Resume
+              </a>
             </div>
           </div>
 
-          {/* RIGHT SECTION (IMAGE) */}
-          <div className="md:w-1/2 md:ml-48 md:mt-20 mt-8 order-1">
-            <img
-              src={pic}
-              className="rounded-full md:w-[450px] md:h-[450px] object-cover border-4 shadow-lg"
-              alt="Shivam Kumar Chaudhary"
-            />
+          <div className="mx-auto w-full max-w-[280px]">
+            <div className="overflow-hidden rounded-full border border-accent/40 bg-panel/50 p-2 shadow-soft">
+              <img
+                src="/photo.jpeg"
+                alt="Shivam Chaudhary profile"
+                className="aspect-square h-auto w-full rounded-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </div>
-
-      <hr />
-    </>
+    </section>
   );
 }
 
 export default Home;
+
+
