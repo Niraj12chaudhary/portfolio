@@ -1,92 +1,49 @@
-import axios from "axios";
-import React from "react";
-import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-
 function Contact() {
-  const {
-    register,
-    handleSubmit,
-
-    formState: { errors },
-  } = useForm();
-
-  const onSubmit = async (data) => {
-    const userInfo = {
-      name: data.name,
-      email: data.email,
-      message: data.message,
-    };
-    try {
-      await axios.post("https://getform.io/f/raeqjora", userInfo);
-      toast.success("Your message has been sent");
-    } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
-    }
-  };
   return (
-    <>
-      <div
-        name="Contact"
-        className="max-w-screen-2xl container mx-auto px-4 md:px-20 my-16"
-      >
-        <h1 className="text-3xl font-bold mb-4">Contact me</h1>
-        <span>Please fill out the form below to contact me</span>
-        <div className=" flex flex-col items-center justify-center mt-5">
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            // action="https://getform.io/f/raeqjora"
-            // method="POST"
-            className="bg-slate-200 w-96 px-8 py-6 rounded-xl"
-          >
-            <h1 className="text-xl font-semibold mb-4">Send Your Message</h1>
-            <div className="flex flex-col mb-4">
-              <label className="block text-gray-700">FullName</label>
-              <input
-                {...register("name", { required: true })}
-                className="shadow rounded-lg appearance-none border  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Enter your fullname"
-              />
-              {errors.name && <span>This field is required</span>}
+    <section id="contact" className="border-t border-line/90 py-20 md:py-24">
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-6 md:px-10">
+        <div className="max-w-3xl space-y-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-accent">Contact</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">Let us Build Reliable Systems</h2>
+          <p className="text-base leading-relaxed text-slate-300 md:text-lg">
+            Open to backend engineering roles and SaaS architecture discussions.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-line bg-panel/40 p-6">
+          <div className="grid gap-6 text-slate-300 md:grid-cols-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Email</p>
+              <a href="mailto:shivamkr7822@gmail.com" className="mt-1 inline-block text-base text-white hover:text-accent">
+                shivamkr7822@gmail.com
+              </a>
             </div>
-            <div className="flex flex-col mb-4">
-              <label className="block text-gray-700">Email Address</label>
-              <input
-                {...register("email", { required: true })}
-                className="shadow rounded-lg appearance-none border  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="email"
-                name="email"
-                type="text"
-                placeholder="Enter your email address"
-              />
-              {errors.email && <span>This field is required</span>}
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">GitHub</p>
+              <a
+                href="https://github.com/Niraj12chaudhary"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-base text-white hover:text-accent"
+              >
+                github.com/Niraj12chaudhary
+              </a>
             </div>
-            <div className="flex flex-col mb-4">
-              <label className="block text-gray-700">Message</label>
-              <textarea
-                {...register("message", { required: true })}
-                className="shadow rounded-lg appearance-none border  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="message"
-                name="message"
-                type="text"
-                placeholder="Enter your Query"
-              />
-              {errors.message && <span>This field is required</span>}
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">LinkedIn</p>
+              <a
+                href="https://www.linkedin.com/in/shivam-kr-chaudhary/"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-base text-white hover:text-accent"
+              >
+                linkedin.com/in/shivam-kr-chaudhary
+              </a>
             </div>
-            <button
-              type="submit"
-              className="bg-black text-white rounded-xl px-3 py-2 hover:bg-slate-700 duration-300"
-            >
-              Send
-            </button>
-          </form>
+          </div>
         </div>
       </div>
-    </>
+    </section>
   );
 }
 
