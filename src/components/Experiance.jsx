@@ -15,7 +15,7 @@ const fullTimeExperience = [
   {
     company: "Sarva Suvidhaen Pvt. Ltd.",
     role: "Software Development Engineer 1",
-    duration: "Sep 2024 - Jul 2025",
+    duration: "June 2024 - Jul 2025",
     focus:
       "Built backend systems for Sanchalak and RailOps to digitize railway operations and notification workflows.",
     highlights: [
@@ -63,3 +63,4 @@ function Experiance() {
 }
 
 export default Experiance;
+
