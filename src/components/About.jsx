@@ -1,212 +1,217 @@
-const architectureBlocks = [
+import { Kicker } from "./Terminal";
+
+const caseStudies = [
   {
-    title: "Monorepo Structure",
-    detail:
-      "Single repository with isolated apps for web and API, shared validation contracts, and unified tooling across services.",
+    id: "knowledge-engine",
+    name: "Knowledge Engine",
+    tagline: "Multi-tenant RAG-as-a-service platform",
+    note: "Evolved from an earlier project called Briefcase - same codebase, later phases.",
+    problem: [
+      "Teams need isolated, secure retrieval-augmented generation without standing up separate infrastructure per client or tenant.",
+      "A shared platform where each tenant's data and queries stay strictly isolated, while still getting the right retrieval and generation setup for their specific workload.",
+    ],
+    architecture: [
+      {
+        title: "Layered FastAPI Backend",
+        detail:
+          "API, service, model, and async-worker layers kept separate, so retrieval, ingestion, and auth logic don't leak into each other.",
+      },
+      {
+        title: "Tenant Isolation",
+        detail:
+          "Row-level filtering scoped by tenant ID at the data-access layer, enforced through a shared auth dependency and covered by dedicated cross-tenant tests - not left to the LLM or the API layer to self-police.",
+      },
+      {
+        title: "pgvector Retrieval + Reranking",
+        detail:
+          "PostgreSQL + pgvector for cosine-distance similarity search, followed by a local cross-encoder reranking stage (sentence-transformers, CPU-only) before generation.",
+      },
+      {
+        title: "Fully Local Model Stack",
+        detail:
+          "Embeddings and generation both call a local Ollama server over HTTP - no external LLM API dependency, no per-call cost, tenant data never leaves the infrastructure.",
+      },
+      {
+        title: "Async Document Ingestion",
+        detail: "Celery-driven ingestion with MinIO object storage and PyMuPDF/python-docx/BeautifulSoup parsing for PDF, DOCX, and HTML.",
+      },
+      {
+        title: "Auth and Provisioning",
+        detail: "API-key based auth with create/list/revoke endpoints.",
+      },
+    ],
+    tradeoffs: [
+      "Row-level filtering over schema-per-tenant: simpler operationally at current scale, at the cost of needing airtight query-layer discipline - this is why cross-tenant isolation has explicit test coverage rather than being assumed.",
+      "A fully local Ollama-based stack avoids per-call LLM API cost and keeps tenant data off third-party APIs, at the cost of owning model hosting and throughput myself instead of offloading it to a provider.",
+    ],
+    status:
+      "Local-only - not yet deployed publicly. Foundational stack, auth/tenant provisioning, and the ingestion + retrieval pipeline are built and covered by 60 automated tests (including dedicated cross-tenant isolation coverage across auth, documents, chunks, and query endpoints); public deployment and load testing are next.",
+    improve: [
+      "A schema-per-tenant option for higher-compliance tenants who need harder isolation guarantees than row-level filtering provides.",
+      "Observability/tracing across the retrieval -> rerank -> generation pipeline, so slow or low-quality answers are traceable to a specific stage.",
+      "Public deployment and load testing under real concurrent tenant traffic, and evaluating whether pgvector still holds up at higher chunk volumes.",
+    ],
+    signal: null,
   },
   {
-    title: "API Layer (NestJS)",
-    detail:
-      "Domain modules for inventory, orders, billing, and users with centralized validation and error boundaries.",
-  },
-  {
-    title: "Database Design (PostgreSQL)",
-    detail:
-      "Normalized entities for shops, inventory, invoices, and transactions with composite indexes for hot queries.",
-  },
-  {
-    title: "Redis Caching Strategy",
-    detail:
-      "Targeted cache for dashboard aggregates and catalog reads plus short-lived state for token checks and throttling.",
-  },
-  {
-    title: "Auth (JWT + RBAC)",
-    detail:
-      "Short-lived JWT access tokens and role-based guards aligned to pharmacy owner, staff, and auditor workflows.",
-  },
-  {
-    title: "Dockerized Environment",
-    detail:
-      "Docker Compose setup for API, web, PostgreSQL, and Redis to maintain dev/stage/prod consistency.",
+    id: "parcelpilot",
+    name: "ParcelPilot",
+    tagline: "Agentic internal support/operations assistant",
+    note: null,
+    problem: [
+      "Support/ops staff need fast, trustworthy answers that combine policy documents (contracts, SOPs, product docs) with live operational data (accounts, orders, tickets).",
+      "The agent must never see data it isn't authorized for, and no state-changing action can happen without a human explicitly confirming it.",
+    ],
+    architecture: [
+      {
+        title: "Manual Agentic Tool-Loop",
+        detail:
+          "Hand-built loop, not a framework's black-box tool runner - needed to intercept one tool's result and pause for human confirmation, build a UI-visible tool-activity trace, and stay provider-agnostic (Groq/Anthropic swap via one config line).",
+      },
+      {
+        title: "RAG Layer",
+        detail:
+          "Qdrant + local embeddings (fastembed/BGE, no GPU or per-call API cost) over policy/SOP/product-doc/agreement PDFs, each chunk tagged with a source-authority ranking.",
+      },
+      {
+        title: "Structured-Data Tools",
+        detail: "Parameterized Postgres lookups - no arbitrary SQL ever exposed to the model.",
+      },
+      {
+        title: "Deterministic Calculation Tool",
+        detail: "All timestamp/SLA-elapsed math is computed by code - the model never eyeballs a time delta itself.",
+      },
+      {
+        title: "Authorization at the Tool Layer",
+        detail: "Every tool call checks account access before touching data, independent of what the model asked for.",
+      },
+      {
+        title: "Confirm-Before-Execute",
+        detail:
+          "The one state-changing tool (create_escalation) can only stage a pending action; the real record is created only after an explicit human click, with P1/high-value escalations additionally gated to a manager role.",
+      },
+    ],
+    tradeoffs: [
+      "A hand-built tool loop costs more upfront engineering than adopting an agent framework, but it's what made the pause-for-confirmation and provider-swap requirements possible.",
+      "Source-authority ranking on retrieval adds a manual tagging step at ingestion time, but prevents outdated policy docs from outranking a signed agreement.",
+    ],
+    status:
+      "Deployment-ready - Dockerfile and hosting config verified locally against a live running stack (Postgres, Qdrant, and a live LLM-backed agent). Not yet hosted on a public URL.",
+    improve: [
+      "Persist conversation history server-side (currently lives in browser state only) for audit trail and cross-device continuity.",
+      "Streaming responses - a multi-tool-call turn can take several seconds.",
+      "Structured extraction of contract terms at ingestion time, so SLA-target lookups are as deterministic as the time-calculation tool already is.",
+    ],
+    signal: {
+      title: "Verified in Testing",
+      items: [
+        "37 automated tests covering authorization, retrieval ranking, time calculations, the full confirm/reject action lifecycle, and the agent's tool-calling loop - run against a scripted fake LLM provider, no live API key needed.",
+        "8-tool-call budget per conversation turn, with an explicit fallback message rather than an infinite loop if a model gets stuck.",
+        "Caught and fixed a real prompt-adherence bug during testing: the default free LLM provider was computing a time delta in free text instead of calling the deterministic calculation tool - fixed by tightening the prompt, not by trusting the model more.",
+      ],
+    },
   },
 ];
 
-const tradeoffs = [
-  "NestJS was chosen for modularity and maintainability, with a higher initial setup cost.",
-  "Relational-first data modeling improved auditability but required join and query optimization.",
-  "Redis is applied only to measured hot paths to keep cache invalidation explicit.",
-  "JWT remains stateless for horizontal scale, with rotation and strict session controls.",
-];
-
-const scaling = [
-  "Scale API pods behind a load balancer without sticky sessions.",
-  "Introduce read replicas for reporting-heavy workloads.",
-  "Move non-critical workflows to queue-backed async workers.",
-  "Add tenant-aware partitioning when high-volume accounts increase.",
-];
-
-const metrics = [
-  { label: "Catalog API latency", value: "~42% reduction" },
-  { label: "Peak throughput", value: "3.1x sustained RPS" },
-  { label: "Auth-related support load", value: "~35% decrease" },
-  { label: "Rollback execution", value: "< 8 minutes" },
-];
-
-function About() {
+function CaseStudy({ study, index }) {
   return (
-    <section id="medshop" className="border-t border-line/90 py-20 md:py-24">
-      <div className="mx-auto w-full max-w-6xl space-y-12 px-6 md:px-10">
-        <div className="max-w-3xl space-y-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent">Featured Case Study</p>
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-            MedShop: Production B2B SaaS for Medical Shops
-          </h2>
-          <p className="text-base leading-relaxed text-slate-300 md:text-lg">
-            A backend-first SaaS platform built to keep pharmacy operations reliable, fast, and auditable under real daily load.
-          </p>
-        </div>
+    <article id={study.id} className="space-y-8 rounded-md border border-line bg-panel/60 p-6 shadow-soft md:p-8">
+      <div className="space-y-2">
+        <p className="font-mono text-xs text-slate-500">
+          <span className="text-accent">$</span> cd ./case-studies/{study.id} <span className="text-slate-700">[{index + 1}/2]</span>
+        </p>
+        <h3 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{study.name}</h3>
+        <p className="text-base text-slate-300">{study.tagline}</p>
+        {study.note ? <p className="text-sm italic text-slate-500">{study.note}</p> : null}
+      </div>
 
-        <div className="grid gap-6 rounded-2xl border border-line bg-panel/60 p-6 shadow-soft md:grid-cols-2">
-          <div className="space-y-3">
-            <h3 className="text-xl font-semibold text-white">Problem</h3>
-            <p className="text-slate-300">
-              Medical shops were handling inventory, purchase orders, and billing on disconnected tools, causing stock mismatches and delayed reconciliation.
-            </p>
-            <p className="text-slate-300">
-              MedShop centralized these workflows into a role-aware SaaS system where consistency, authorization, and operability were non-negotiable.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <h3 className="text-xl font-semibold text-white">Technical Decisions and Tradeoffs</h3>
-            <ul className="space-y-2 text-slate-300">
-              {tradeoffs.map((item) => (
-                <li key={item} className="rounded-md border border-line/80 bg-slate-900/60 px-3 py-2">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="space-y-5">
-          <h3 className="text-xl font-semibold text-white">Architecture</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            {architectureBlocks.map((block) => (
-              <article key={block.title} className="rounded-xl border border-line bg-panel/40 p-5">
-                <h4 className="font-medium text-white">{block.title}</h4>
-                <p className="mt-2 text-sm leading-relaxed text-slate-300">{block.detail}</p>
-              </article>
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">Problem</h4>
+          <div className="space-y-2 text-sm text-slate-300">
+            {study.problem.map((p) => (
+              <p key={p}>{p}</p>
             ))}
           </div>
         </div>
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">Trade-offs</h4>
+          <ul className="space-y-2 text-sm text-slate-300">
+            {study.tradeoffs.map((item) => (
+              <li key={item} className="rounded-md border border-line/80 bg-slate-950/50 px-3 py-2">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
-        <div className="rounded-2xl border border-line bg-panel/50 p-6">
-          <h3 className="mb-4 text-xl font-semibold text-white">Architecture Diagram</h3>
-          <div className="rounded-xl border border-line bg-slate-950/50 p-3">
-            <svg viewBox="0 0 980 420" role="img" aria-label="MedShop production architecture diagram" className="h-auto w-full">
-              <defs>
-                <linearGradient id="card" x1="0%" x2="100%" y1="0%" y2="0%">
-                  <stop offset="0%" stopColor="#0f172a" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
-              </defs>
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">Architecture</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          {study.architecture.map((block) => (
+            <div key={block.title} className="rounded-md border border-line bg-slate-950/40 p-4">
+              <p className="font-medium text-white">{block.title}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-300">{block.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
-              <rect x="40" y="150" rx="14" ry="14" width="180" height="90" fill="url(#card)" stroke="#334155" />
-              <text x="130" y="186" textAnchor="middle" fill="#e2e8f0" fontSize="20" fontFamily="sans-serif">
-                Next.js App
-              </text>
-              <text x="130" y="212" textAnchor="middle" fill="#94a3b8" fontSize="14" fontFamily="sans-serif">
-                B2B Dashboard
-              </text>
+      {study.signal ? (
+        <div className="space-y-3 rounded-md border border-accent/30 bg-accent/[0.04] p-5">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-accent">{study.signal.title}</h4>
+          <ul className="space-y-2 text-sm text-slate-300">
+            {study.signal.items.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="text-accent">-</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
-              <rect x="290" y="120" rx="14" ry="14" width="210" height="150" fill="url(#card)" stroke="#334155" />
-              <text x="395" y="162" textAnchor="middle" fill="#e2e8f0" fontSize="20" fontFamily="sans-serif">
-                NestJS API
-              </text>
-              <text x="395" y="188" textAnchor="middle" fill="#94a3b8" fontSize="14" fontFamily="sans-serif">
-                JWT + RBAC
-              </text>
-              <text x="395" y="212" textAnchor="middle" fill="#94a3b8" fontSize="14" fontFamily="sans-serif">
-                Service Modules
-              </text>
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">Status</h4>
+          <p className="text-sm leading-relaxed text-slate-300">{study.status}</p>
+        </div>
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">What I'd Improve for Production</h4>
+          <ul className="space-y-2 text-sm text-slate-300">
+            {study.improve.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="text-accent">-</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </article>
+  );
+}
 
-              <rect x="570" y="45" rx="14" ry="14" width="180" height="90" fill="url(#card)" stroke="#334155" />
-              <text x="660" y="81" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontFamily="sans-serif">
-                PostgreSQL
-              </text>
-              <text x="660" y="107" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="sans-serif">
-                Orders, Inventory
-              </text>
-
-              <rect x="570" y="165" rx="14" ry="14" width="180" height="90" fill="url(#card)" stroke="#334155" />
-              <text x="660" y="201" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontFamily="sans-serif">
-                Redis
-              </text>
-              <text x="660" y="227" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="sans-serif">
-                Cache + Rate Limit
-              </text>
-
-              <rect x="570" y="285" rx="14" ry="14" width="180" height="90" fill="url(#card)" stroke="#334155" />
-              <text x="660" y="321" textAnchor="middle" fill="#e2e8f0" fontSize="18" fontFamily="sans-serif">
-                Queue Worker
-              </text>
-              <text x="660" y="347" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="sans-serif">
-                Async Jobs
-              </text>
-
-              <rect x="790" y="95" rx="14" ry="14" width="150" height="120" fill="url(#card)" stroke="#334155" />
-              <text x="865" y="131" textAnchor="middle" fill="#e2e8f0" fontSize="17" fontFamily="sans-serif">
-                Docker
-              </text>
-              <text x="865" y="156" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="sans-serif">
-                API + Web
-              </text>
-              <text x="865" y="180" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="sans-serif">
-                CI/CD Deploy
-              </text>
-
-              <rect x="790" y="245" rx="14" ry="14" width="150" height="90" fill="url(#card)" stroke="#334155" />
-              <text x="865" y="281" textAnchor="middle" fill="#e2e8f0" fontSize="17" fontFamily="sans-serif">
-                Observability
-              </text>
-              <text x="865" y="307" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="sans-serif">
-                Logs + Metrics
-              </text>
-
-              <line x1="220" y1="195" x2="290" y2="195" stroke="#6ee7b7" strokeWidth="2.5" />
-              <line x1="500" y1="155" x2="570" y2="90" stroke="#6ee7b7" strokeWidth="2.5" />
-              <line x1="500" y1="195" x2="570" y2="210" stroke="#6ee7b7" strokeWidth="2.5" />
-              <line x1="500" y1="240" x2="570" y2="330" stroke="#6ee7b7" strokeWidth="2.5" />
-              <line x1="750" y1="90" x2="790" y2="145" stroke="#6ee7b7" strokeWidth="2.5" />
-              <line x1="750" y1="210" x2="790" y2="145" stroke="#6ee7b7" strokeWidth="2.5" />
-              <line x1="750" y1="330" x2="790" y2="290" stroke="#6ee7b7" strokeWidth="2.5" />
-            </svg>
-          </div>
+function About() {
+  return (
+    <section id="case-studies" className="border-t border-line/90 py-20 md:py-24">
+      <div className="mx-auto w-full max-w-6xl space-y-12 px-6 md:px-10">
+        <div className="max-w-3xl space-y-4">
+          <Kicker>featured case studies</Kicker>
+          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            Production RAG and Agentic Systems
+          </h2>
+          <p className="text-base leading-relaxed text-slate-300 md:text-lg">
+            Two backend-first systems built around retrieval-augmented generation and
+            tool-calling agents - the architecture decisions, trade-offs, and current status of each.
+          </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-3 rounded-2xl border border-line bg-panel/40 p-6">
-            <h3 className="text-xl font-semibold text-white">Scaling Considerations</h3>
-            <ul className="space-y-2 text-slate-300">
-              {scaling.map((item) => (
-                <li key={item}>- {item}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="space-y-3 rounded-2xl border border-line bg-panel/40 p-6">
-            <h3 className="text-xl font-semibold text-white">Estimated Impact Metrics</h3>
-            <ul className="space-y-3 text-slate-300">
-              {metrics.map((item) => (
-                <li
-                  key={item.label}
-                  className="flex items-center justify-between rounded-md border border-line/70 bg-slate-900/60 px-4 py-2"
-                >
-                  <span>{item.label}</span>
-                  <span className="font-medium text-accent">{item.value}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="space-y-8">
+          {caseStudies.map((study, index) => (
+            <CaseStudy key={study.id} study={study} index={index} />
+          ))}
         </div>
       </div>
     </section>

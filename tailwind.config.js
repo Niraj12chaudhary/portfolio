@@ -4,13 +4,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: "#06080f",
-        panel: "#0d1220",
-        line: "#1b2538",
-        accent: "#6ee7b7",
+        canvas: "#0a0a0a",
+        panel: "#121212",
+        line: "#2a2a2a",
+        accent: "#f2b544",
+      },
+      fontFamily: {
+        mono: [
+          "JetBrains Mono",
+          "SFMono-Regular",
+          "Menlo",
+          "Consolas",
+          "Liberation Mono",
+          "monospace",
+        ],
       },
       boxShadow: {
-        soft: "0 12px 40px rgba(2, 8, 23, 0.35)",
+        soft: "0 12px 40px rgba(0, 0, 0, 0.45)",
       },
     },
   },
